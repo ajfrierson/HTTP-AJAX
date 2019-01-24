@@ -1,53 +1,86 @@
 import React, { Component } from 'react';
-import logo from './logo.svg';
 import './App.css';
-import { Route, withRouter } from 'react-router-dom';
-import styled from 'styled-components';
+import FriendsList from './components/FriendsList';
 import axios from 'axios';
+import AddFriendForm from './components/AddFriendForm';
+import {Route, NavLink} from 'react-router-dom';
 
- 
 class App extends Component {
-  constructor(props){
+  constructor(props) {
     super(props);
-
     this.state = {
       friends: [],
+      friendName: '',
+      friendAge: '',
+      friendEmail: ''
     }
   }
 
   componentDidMount() {
     axios
-        .get('http://localhost:5000/friends')
-        .then(response => {
-            this.setState({ friends : response.data })
-        })
-        .catch(err => {
-            console.log(err)
-        })
-  };
+    .get('http://localhost:5000/friends')
+    .then(response => {
+      console.log("HERE is your response", response);
+      this.setState({friends: response.data});
+    })
+    .catch(err => {
+      console.log("Error is ", err);
+    })
+  }
+
+  handleChange = e => {
+    this.setState({[e.target.name]:e.target.value});
+  }
+
+  editHandler = e => {
+    this.setState({[e.target.name]: e.target.value})
+  }
+
+  setData = data => {
+    this.setState({friends: data})
+  }
+
+  handleSubmitFriend = e => {
+    e.preventDefault();
+    console.log("Hi there");
+    const newFriend = { name:this.state.friendName,
+      age: this.state.friendAge,
+      email: this.state.friendEmail};
+    axios
+      .post('http://localhost:5000/friends', newFriend)
+      .then(response => {
+        console.log("POST RESPONSE", response);
+        this.setState({friends: response.data, friendName: '',
+      friendAge: '', friendEmail: ''});
+      window.location.href = "/";
+      })
+      .catch(err => {
+        console.log("POST ERROR is", err);
+      })
+  }
+
+
 
   render() {
     return (
       <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <p>
-            Edit <code>src/App.js</code> and save to reload.
-          </p>
-          <a
-            className="App-link"
-            href="https://reactjs.org"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn React
-          </a>
-        </header>
+        <NavLink to="/friend-form"><button>Add friend</button></NavLink>
+        <NavLink to="/"><button>View Freinds</button></NavLink>
+
+        <Route exact path="/" render={props => <FriendsList {...props}
+        friends={this.state.friends} handleChange={this.handleChange}
+        setData={this.setData} />} />
+
+        <Route path="/friend-form" render={props => <AddFriendForm {...props}
+        handleChange={this.handleChange}
+        name = {this.state.friendName} age={this.state.friendAge}
+        email={this.state.friendEmail}
+        handleSubmitFriend={this.handleSubmitFriend} />} />
+
+
       </div>
     );
   }
 }
 
-
-
-  export default withRouter(App);
+export default App;
